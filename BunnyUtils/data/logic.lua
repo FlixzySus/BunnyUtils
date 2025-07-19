@@ -16,7 +16,7 @@ M.sample_delay = 0.1
 M.start_position = nil
 M.end_position = nil
 
--- Memoized plugin root
+-- Memorized plugin root
 local plugin_root = (function()
     local root = string.gmatch(package.path, '.*?\\?')()
     return root:gsub('%?', '')
@@ -46,7 +46,7 @@ function M.save_path_to_file(start_pos, path, end_pos)
     local filename = get_sequential_filename("RecordedPath")
     local file = io.open(filename, "w")
     if not file then
-        console.print("❌ Failed to open file:\n" .. filename)
+        console.print("Failed to open file:\n" .. filename)
         return
     end
 
@@ -61,7 +61,7 @@ function M.save_path_to_file(start_pos, path, end_pos)
 
     file:write("}\n\nreturn points\n")
     file:close()
-    console.print("✅ Path saved: " .. filename)
+    console.print("Path saved: " .. filename)
 end
 
 function M.perform_teleport()
@@ -101,17 +101,17 @@ function M.handle_update()
 
     if gui.elements.start_btn:get() then
         M.start_position = ped:get_position()
-        console.print(string.format("🚩 Start: vec3(%.6f, %.6f, %.6f)", M.start_position:x(), M.start_position:y(), M.start_position:z()))
+        console.print(string.format("Start: vec3(%.6f, %.6f, %.6f)", M.start_position:x(), M.start_position:y(), M.start_position:z()))
         M.is_recording = true
         M.recorded_path = {}
         M.last_position = nil
         M.last_record_time = os.clock()
-        console.print("🎥 Recording started...")
+        console.print("Recording started...")
     end
 
     if gui.elements.stop_btn:get() then
         M.end_position = ped:get_position()
-        console.print(string.format("🏁 End:   vec3(%.6f, %.6f, %.6f)", M.end_position:x(), M.end_position:y(), M.end_position:z()))
+        console.print(string.format("End:   vec3(%.6f, %.6f, %.6f)", M.end_position:x(), M.end_position:y(), M.end_position:z()))
         M.is_recording = false
         M.save_path_to_file(M.start_position, M.recorded_path, M.end_position)
         M.recorded_path = {}
