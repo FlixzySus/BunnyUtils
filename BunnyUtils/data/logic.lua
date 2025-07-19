@@ -16,20 +16,27 @@ M.sample_delay = 0.1
 M.start_position = nil
 M.end_position = nil
 
-local base_folder = "C:\\diablo_qqt\\scripts\\BunnyUtils\\"
+-- Get plugin root folder (scripts\BunnyUtils\)
+local function get_plugin_root_path()
+    local plugin_root = string.gmatch(package.path, '.*?\\?')()
+    plugin_root = plugin_root:gsub('%?', '')
+    return plugin_root
+end
 
-local function ensure_subfolder(subfolder)
-    local path = base_folder .. subfolder .. "\\"
-    os.execute("mkdir \"" .. path .. "\"")
+-- Make sure BunnyUtils\Recorded\ exists
+local function ensure_recorded_folder()
+    local path = get_plugin_root_path() .. "Recorded\\"
+    os.execute('mkdir "' .. path .. '"')
     return path
 end
 
-local function get_sequential_filename(subfolder, base)
-    local folder = ensure_subfolder(subfolder)
+local base_folder = ensure_recorded_folder()
+
+local function get_sequential_filename(base)
     local i = 1
     local filename
     repeat
-        filename = string.format("%s%s%d.lua", folder, base, i)
+        filename = string.format("%s%s%d.lua", base_folder, base, i)
         local f = io.open(filename, "r")
         if f then f:close() i = i + 1 else break end
     until false
@@ -37,12 +44,13 @@ local function get_sequential_filename(subfolder, base)
 end
 
 function M.save_path_to_file(start_pos, path, end_pos)
-    local filename = get_sequential_filename("Recorded", "RecordedPath")
+    local filename = get_sequential_filename("RecordedPath")
     local file = io.open(filename, "w")
     if not file then
         console.print("Failed to open file:\n" .. filename)
         return
     end
+
     file:write("local points = {\n")
     if start_pos then
         file:write(string.format("    vec3(%.6f, %.6f, %.6f),\n", start_pos:x(), start_pos:y(), start_pos:z()))
@@ -105,10 +113,9 @@ function M.handle_update()
             local ped = get_local_player()
             if ped then
                 M.end_position = ped:get_position()
-                console.print(string.format("End: vec3(%.6f, %.6f, %.6f)", M.end_position:x(), M.end_position:y(), M.end_position:z()))
+                console.print(string.format("End:   vec3(%.6f, %.6f, %.6f)", M.end_position:x(), M.end_position:y(), M.end_position:z()))
             end
             M.is_recording = false
-            console.print("Recording ended...")
             M.save_path_to_file(M.start_position, M.recorded_path, M.end_position)
             M.recorded_path = {}
         end
