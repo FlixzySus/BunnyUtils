@@ -16,30 +16,29 @@ M.sample_delay = 0.1
 M.start_position = nil
 M.end_position = nil
 
--- Get plugin root folder (scripts\BunnyUtils\)
-local function get_plugin_root_path()
-    local plugin_root = string.gmatch(package.path, '.*?\\?')()
-    plugin_root = plugin_root:gsub('%?', '')
-    return plugin_root
-end
+-- Memoized plugin root
+local plugin_root = (function()
+    local root = string.gmatch(package.path, '.*?\\?')()
+    return root:gsub('%?', '')
+end)()
 
--- Make sure BunnyUtils\Recorded\ exists
-local function ensure_recorded_folder()
-    local path = get_plugin_root_path() .. "Recorded\\"
+local base_folder = plugin_root .. "Recorder\\"
+
+local function ensure_folder(path)
+    local f = io.open(path .. "dummy.txt", "a")
+    if f then f:close() os.remove(path .. "dummy.txt") return end
     os.execute('mkdir "' .. path .. '"')
-    return path
 end
 
-local base_folder = ensure_recorded_folder()
+ensure_folder(base_folder)
 
 local function get_sequential_filename(base)
-    local i = 1
-    local filename
+    local i, file, filename = 1
     repeat
         filename = string.format("%s%s%d.lua", base_folder, base, i)
-        local f = io.open(filename, "r")
-        if f then f:close() i = i + 1 else break end
-    until false
+        file = io.open(filename, "r")
+        if file then file:close() i = i + 1 end
+    until not file
     return filename
 end
 
@@ -47,29 +46,29 @@ function M.save_path_to_file(start_pos, path, end_pos)
     local filename = get_sequential_filename("RecordedPath")
     local file = io.open(filename, "w")
     if not file then
-        console.print("Failed to open file:\n" .. filename)
+        console.print("❌ Failed to open file:\n" .. filename)
         return
     end
 
     file:write("local points = {\n")
-    if start_pos then
-        file:write(string.format("    vec3(%.6f, %.6f, %.6f),\n", start_pos:x(), start_pos:y(), start_pos:z()))
-    end
-    for _, pos in ipairs(path) do
+    local function write_vec(pos)
         file:write(string.format("    vec3(%.6f, %.6f, %.6f),\n", pos:x(), pos:y(), pos:z()))
     end
-    if end_pos then
-        file:write(string.format("    vec3(%.6f, %.6f, %.6f),\n", end_pos:x(), end_pos:y(), end_pos:z()))
-    end
+
+    if start_pos then write_vec(start_pos) end
+    for _, pos in ipairs(path) do write_vec(pos) end
+    if end_pos then write_vec(end_pos) end
+
     file:write("}\n\nreturn points\n")
     file:close()
-    console.print("Path saved: " .. filename)
+    console.print("✅ Path saved: " .. filename)
 end
 
 function M.perform_teleport()
     local idx = gui.elements.waypoint_selector:get() + 1
     local name = gui.waypoints_enum[idx]
     local id = gui.waypoints_ids[name]
+
     if id then
         teleport_to_waypoint(id)
         M.teleport_target_name = name
@@ -95,43 +94,37 @@ function M.handle_update()
         M.teleport_target_name = nil
     end
 
-    if gui.elements.recording_toggle:get() then
-        if gui.elements.start_btn:get() then
-            local ped = get_local_player()
-            if ped then
-                M.start_position = ped:get_position()
-                console.print(string.format("Start: vec3(%.6f, %.6f, %.6f)", M.start_position:x(), M.start_position:y(), M.start_position:z()))
-            end
-            M.is_recording = true
-            M.recorded_path = {}
-            M.last_position = nil
-            M.last_record_time = os.clock()
-            console.print("Recording started...")
-        end
+    if not gui.elements.recording_toggle:get() then return end
 
-        if gui.elements.stop_btn:get() then
-            local ped = get_local_player()
-            if ped then
-                M.end_position = ped:get_position()
-                console.print(string.format("End:   vec3(%.6f, %.6f, %.6f)", M.end_position:x(), M.end_position:y(), M.end_position:z()))
-            end
-            M.is_recording = false
-            M.save_path_to_file(M.start_position, M.recorded_path, M.end_position)
-            M.recorded_path = {}
-        end
+    local ped = get_local_player()
+    if not ped then return end
 
-        if M.is_recording then
-            local ped = get_local_player()
-            if ped and ped:is_moving() then
-                local now = os.clock()
-                if now - M.last_record_time >= M.sample_delay then
-                    local pos = ped:get_position()
-                    if not M.last_position or not pos:equals(M.last_position) then
-                        table.insert(M.recorded_path, pos)
-                        M.last_position = pos
-                        M.last_record_time = now
-                    end
-                end
+    if gui.elements.start_btn:get() then
+        M.start_position = ped:get_position()
+        console.print(string.format("🚩 Start: vec3(%.6f, %.6f, %.6f)", M.start_position:x(), M.start_position:y(), M.start_position:z()))
+        M.is_recording = true
+        M.recorded_path = {}
+        M.last_position = nil
+        M.last_record_time = os.clock()
+        console.print("🎥 Recording started...")
+    end
+
+    if gui.elements.stop_btn:get() then
+        M.end_position = ped:get_position()
+        console.print(string.format("🏁 End:   vec3(%.6f, %.6f, %.6f)", M.end_position:x(), M.end_position:y(), M.end_position:z()))
+        M.is_recording = false
+        M.save_path_to_file(M.start_position, M.recorded_path, M.end_position)
+        M.recorded_path = {}
+    end
+
+    if M.is_recording and ped:is_moving() then
+        local now = os.clock()
+        if now - M.last_record_time >= M.sample_delay then
+            local pos = ped:get_position()
+            if not M.last_position or not pos:equals(M.last_position) then
+                table.insert(M.recorded_path, pos)
+                M.last_position = pos
+                M.last_record_time = now
             end
         end
     end
