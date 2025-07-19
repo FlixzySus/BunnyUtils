@@ -16,7 +16,7 @@ M.sample_delay = 0.1
 M.start_position = nil
 M.end_position = nil
 
-local base_folder = "D:\\OneDrive\\Desktop\\D4 Lua\\diablo_qqt\\scripts\\BunnyUtils\\"
+local base_folder = "C:\\diablo_qqt\\scripts\\BunnyUtils\\"
 
 local function ensure_subfolder(subfolder)
     local path = base_folder .. subfolder .. "\\"
