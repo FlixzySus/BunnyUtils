@@ -28,3 +28,6 @@ local points = {
 
 return points
 ```
+
+# Required
+Inside of `logic.lua` change the `local base_folder` to match your path to inside the BunnyUtils script folder default is set to `C:\\diablo_qqt\\scripts\\BunnyUtils\\`
