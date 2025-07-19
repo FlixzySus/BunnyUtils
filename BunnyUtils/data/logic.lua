@@ -16,7 +16,7 @@ M.sample_delay = 0.1
 M.start_position = nil
 M.end_position = nil
 
--- Memorized plugin root
+-- Memoized plugin root
 local plugin_root = (function()
     local root = string.gmatch(package.path, '.*?\\?')()
     return root:gsub('%?', '')
