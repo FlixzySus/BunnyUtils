@@ -1,15 +1,13 @@
 # BunnyUtils
 Utility Script for QQT
 
-# Teleport & Path Recorder Module
-
-## 🛰️ Teleport Features
+## 🛰️ Teleport
 - **Enable Teleport Keybind** – `checkbox` to toggle use of a hotkey for teleporting  
 - **Teleport Key** – `keybind` picker to assign which key triggers teleport  
 - **Waypoint Selector** – `combo_box` dropdown listing all predefined waypoints  
 - **Teleport Button** – `button` you click to instantly teleport to the selected waypoint  
 
-## 📸 Path Recorder Features
+## 📸 Path Recorder
 - **Enable Path Recording** – `checkbox` to enable/disable recording mode  
 - **Start Path** – `button` to begin capturing your movement (records at set sample delay)  
 - **End Path** – `button` to stop recording and automatically save the path as a `.lua` file with `vec3` coordinates  
@@ -28,3 +26,6 @@ local points = {
 
 return points
 ```
+
+## 📄 Console Suppressor
+- **Suppress Console Logs** - `checkbox` to toggle off console logs from other scripts
