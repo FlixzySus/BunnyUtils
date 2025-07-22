@@ -28,4 +28,4 @@ return points
 ```
 
 ## 📄 Console Suppressor
-- **Suppress Console Logs** - `checkbox` to toggle off console logs from other scripts
+- **Suppress Console Logs** - `checkbox` to disable/enable console logs from other scripts
