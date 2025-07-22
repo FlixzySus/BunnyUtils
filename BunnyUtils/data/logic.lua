@@ -16,6 +16,28 @@ M.sample_delay = 0.1
 M.start_position = nil
 M.end_position = nil
 
+-- Console Suppressor (global-safe)
+_G.__original_console_print = _G.__original_console_print or console.print
+_G.__original_console_print_full = _G.__original_console_print_full or console.print_full
+
+local silent_print = function(...) end
+local silent_print_full = function(...) end
+local suppress_print = false
+
+local function apply_suppress_state()
+    if suppress_print then
+        console.print = silent_print
+        console.print_full = silent_print_full
+    else
+        console.print = _G.__original_console_print
+        console.print_full = _G.__original_console_print_full
+    end
+end
+
+-- Apply on load
+suppress_print = gui.elements.suppress_console_checkbox:get()
+apply_suppress_state()
+
 -- Memoized plugin root
 local plugin_root = (function()
     local root = string.gmatch(package.path, '.*?\\?')()
@@ -79,6 +101,13 @@ function M.perform_teleport()
 end
 
 function M.handle_update()
+    -- Toggle suppress state if checkbox changed
+    local new_state = gui.elements.suppress_console_checkbox:get()
+    if new_state ~= suppress_print then
+        suppress_print = new_state
+        apply_suppress_state()
+    end
+
     if gui.elements.teleport_button:get() then
         M.teleport_triggered = true
     end
