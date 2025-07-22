@@ -5,6 +5,7 @@ gui.elements = {}
 gui.root = tree_node:new(0)
 gui.subtree_teleport = tree_node:new(1)
 gui.subtree_recorder = tree_node:new(2)
+gui.subtree_console = tree_node:new(3)
 
 local waypoint_data = require("data.enums")
 
@@ -19,6 +20,9 @@ local keybind_data = checkbox:new(false, get_hash(plugin_label .. "_keybind_data
 gui.elements.recording_toggle = checkbox:new(false, get_hash(plugin_label .. "_recording_toggle"))
 gui.elements.start_btn = button:new(get_hash(plugin_label .. "_record_start"))
 gui.elements.stop_btn = button:new(get_hash(plugin_label .. "_record_stop"))
+
+-- CONSOLE SUPPRESSOR GUI
+gui.elements.suppress_console_checkbox = checkbox:new(false, get_hash("console_suppressor_qqt_suppress_console"))
 
 -- Waypoints from Enums
 gui.waypoints_enum = waypoint_data.waypoints_enum
@@ -44,6 +48,12 @@ function gui.render()
             gui.elements.stop_btn:render("End Path", "Stop and save path", 0, button_click.lmb)
         end
         gui.subtree_recorder:pop()
+    end
+
+    -- CONSOLE SUPPRESSOR SUBTREE
+    if gui.subtree_console:push("Console Suppressor") then
+        gui.elements.suppress_console_checkbox:render("Suppress Console Logs", "Toggle off console logs from all scripts")
+        gui.subtree_console:pop()
     end
 
     gui.root:pop()
