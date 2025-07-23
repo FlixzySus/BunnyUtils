@@ -45,6 +45,7 @@ local plugin_root = (function()
 end)()
 
 local base_folder = plugin_root .. "Recorder\\"
+local log_folder = plugin_root .. "Logs\\"
 
 local function ensure_folder(path)
     local f = io.open(path .. "dummy.txt", "a")
@@ -53,19 +54,24 @@ local function ensure_folder(path)
 end
 
 ensure_folder(base_folder)
+ensure_folder(log_folder)
 
-local function get_sequential_filename(base)
-    local i, file, filename = 1
-    repeat
-        filename = string.format("%s%s%d.lua", base_folder, base, i)
-        file = io.open(filename, "r")
-        if file then file:close() i = i + 1 end
-    until not file
+local function get_sequential_path_filename()
+    local base_name = "BunnyUtils - Path"
+    local ext = ".lua"
+    local filename = base_folder .. base_name .. ext
+    local i = 2
+
+    while io.open(filename, "r") do
+        filename = base_folder .. base_name .. "(" .. i .. ")" .. ext
+        i = i + 1
+    end
+
     return filename
 end
 
 function M.save_path_to_file(start_pos, path, end_pos)
-    local filename = get_sequential_filename("RecordedPath")
+    local filename = get_sequential_path_filename()
     local file = io.open(filename, "w")
     if not file then
         console.print("Failed to open file:\n" .. filename)
@@ -100,14 +106,85 @@ function M.perform_teleport()
     end
 end
 
+-- Log recording system
+local console_log_history = {}
+local recording_logs = gui.elements.console_record_toggle:get()
+
+local function capture_log(...)
+    local msg = table.concat({...}, " ")
+    table.insert(console_log_history, { time = os.time(), text = msg })
+end
+
+local function capture_log_full(delay, interval, ...)
+    local msg = table.concat({...}, " ")
+    table.insert(console_log_history, { time = os.time(), delay = delay, interval = interval, text = msg })
+end
+
+-- Override console functions
+console.print = function(...)
+    if gui.elements.console_record_toggle:get() then
+        capture_log(...)
+    end
+    if not gui.elements.suppress_console_checkbox:get() then
+        _G.__original_console_print(...)
+    end
+end
+
+console.print_full = function(delay, interval, ...)
+    if gui.elements.console_record_toggle:get() then
+        capture_log_full(delay, interval, ...)
+    end
+    if not gui.elements.suppress_console_checkbox:get() then
+        _G.__original_console_print_full(delay, interval, ...)
+    end
+end
+
+local function save_console_log_to_file()
+    -- base name without extension
+    local base_name = "BunnyUtils - Log"
+    local ext = ".json"
+    local filename = log_folder .. base_name .. ext
+    local i = 2
+
+    -- increment until unused file name is found
+    while io.open(filename, "r") do
+        filename = log_folder .. base_name .. "(" .. i .. ")" .. ext
+        i = i + 1
+    end
+
+    local file = io.open(filename, "w")
+    if file then
+        local buffer = {"["}
+        for i, entry in ipairs(console_log_history) do
+            local line = string.format('"%s"', entry.text:gsub('"', '\\"'))
+            table.insert(buffer, line .. (i < #console_log_history and "," or ""))
+        end
+        table.insert(buffer, "]")
+        file:write(table.concat(buffer, "\n"))
+        file:close()
+        console.print("Saved console log to: " .. filename)
+    else
+        console.print("Failed to save console log.")
+    end
+end
+
 function M.handle_update()
-    -- Toggle suppress state if checkbox changed
+    -- Console Suppressor toggle
     local new_state = gui.elements.suppress_console_checkbox:get()
     if new_state ~= suppress_print then
         suppress_print = new_state
         apply_suppress_state()
     end
 
+    -- Console Recorder toggle
+    local now_recording = gui.elements.console_record_toggle:get()
+    if recording_logs and not now_recording then
+        save_console_log_to_file()
+        console_log_history = {}
+    end
+    recording_logs = now_recording
+
+    -- Teleport button logic
     if gui.elements.teleport_button:get() then
         M.teleport_triggered = true
     end
@@ -123,6 +200,7 @@ function M.handle_update()
         M.teleport_target_name = nil
     end
 
+    -- Path Recorder logic
     if not gui.elements.recording_toggle:get() then return end
 
     local ped = get_local_player()
