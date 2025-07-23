@@ -27,5 +27,6 @@ local points = {
 return points
 ```
 
-## 📄 Console Suppressor
+## 📄 Console Options
 - **Suppress Console Logs** - `checkbox` to disable/enable console logs from other scripts
+- **Record Console Logs** - `checkbox` to record and save console logs to file
