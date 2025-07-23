@@ -21,17 +21,17 @@ gui.elements.recording_toggle = checkbox:new(false, get_hash(plugin_label .. "_r
 gui.elements.start_btn = button:new(get_hash(plugin_label .. "_record_start"))
 gui.elements.stop_btn = button:new(get_hash(plugin_label .. "_record_stop"))
 
--- CONSOLE SUPPRESSOR GUI
+-- CONSOLE GUI
 gui.elements.suppress_console_checkbox = checkbox:new(false, get_hash("console_suppressor_qqt_suppress_console"))
+gui.elements.console_record_toggle = checkbox:new(false, get_hash("console_suppressor_qqt_record_logs"))
 
--- Waypoints from Enums
+-- Waypoints
 gui.waypoints_enum = waypoint_data.waypoints_enum
 gui.waypoints_ids = waypoint_data.waypoints_ids
 
 function gui.render()
     if not gui.root:push(plugin_label) then return end
 
-    -- TELEPORT SUBTREE
     if gui.subtree_teleport:push("Teleport") then
         gui.elements.keybind_toggle:render("Enable Teleport Keybind", "Use a key to teleport to selected waypoint")
         gui.elements.manual_keybind:render("Teleport Key", "Press to set keybind")
@@ -40,7 +40,6 @@ function gui.render()
         gui.subtree_teleport:pop()
     end
 
-    -- RECORDER SUBTREE
     if gui.subtree_recorder:push("Path Recorder") then
         gui.elements.recording_toggle:render("Enable Path Recording", "Enable to record player routes")
         if gui.elements.recording_toggle:get() then
@@ -50,9 +49,9 @@ function gui.render()
         gui.subtree_recorder:pop()
     end
 
-    -- CONSOLE SUPPRESSOR SUBTREE
-    if gui.subtree_console:push("Console Suppressor") then
-        gui.elements.suppress_console_checkbox:render("Suppress Console Logs", "Toggle off console logs from all scripts")
+    if gui.subtree_console:push("Console Options") then
+        gui.elements.suppress_console_checkbox:render("Suppress Console Logs", "Toggle on to disable console logs / Toggle off to turn back on")
+        gui.elements.console_record_toggle:render("Record Console Logs", "Toggle on to start recording logs / Toggle off to save logs")
         gui.subtree_console:pop()
     end
 
